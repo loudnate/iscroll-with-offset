@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>iScroll demo: horizontal scroll with offset snap</title>
+
+<script type="application/javascript" src="../../src/iscroll.js?v4"></script>
+
+<script type="text/javascript">
+
+var myScroll;
+function loaded() {
+  window.elementWidth = document.getElementById('thelist').children[0].offsetWidth;
+  var snapOffsetX = (document.getElementById('wrapper').offsetWidth - window.elementWidth) / 2;
+	myScroll = new iScroll('wrapper', {'snap':'li', 'snapOffsetX': snapOffsetX, 'hScrollbar': false});
+}
+
+function resizeHandler(e) {
+  var snapOffsetX = (document.getElementById('wrapper').offsetWidth - window.elementWidth) / 2;
+  myScroll.options.snapOffsetX = snapOffsetX;
+  myScroll.refresh();
+  myScroll.scrollToPage(myScroll.currPageX);
+}
+
+document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
+
+document.addEventListener('DOMContentLoaded', loaded, false);
+
+window.addEventListener('resize', resizeHandler, false);
+
+</script>
+
+<style type="text/css" media="all">
+body,ul,li {
+	padding:0;
+	margin:0;
+}
+
+body {
+	font-size:12px;
+	font-family:sans-serif;
+	-webkit-user-select:none;
+    -webkit-text-size-adjust:none;
+/*	-webkit-box-sizing:border-box;*/
+	font-family:helvetica;
+/*	padding-bottom:45px;	/*	This prevents the scroller to lock if the user swipes down outside of the screen.
+							 	NOT needed if in home screen mode. */
+}
+
+#header {
+	position:absolute; z-index:2;
+	top:0; left:0;
+	width:100%;
+	height:45px;
+	line-height:45px;
+	background-image:-webkit-gradient(linear, 0 0, 0 100%, color-stop(0, #fe96c9), color-stop(0.05, #d51875), color-stop(1, #7b0a2e));
+	padding:0;
+	color:#eee;
+	font-size:20px;
+	text-align:center;
+}
+
+#header a {
+	color:#f3f3f3;
+	text-decoration:none;
+	font-weight:bold;
+	text-shadow:0 -1px 0 rgba(0,0,0,0.5);
+}
+
+#wrapper {
+	position:absolute; z-index:1;
+	top:45px; bottom:0; left:0;
+	width:100%;
+	background:#aaa;
+	overflow:auto;
+}
+
+#scroller {
+	width:5450px;
+	height:100%;
+	float:left;
+	padding:0;
+}
+
+#scroller ul {
+	list-style:none;
+	display:block;
+	float:left;
+	width:100%;
+	height:100%;
+	padding:0;
+	margin:0;
+	text-align:left;
+}
+
+#scroller li {
+	display:block;
+	vertical-align:middle;
+	float:left;
+	margin-top:20px;
+	margin-left:30px;
+	padding:10px;
+	width:478px;
+	height:478px;
+	border:10px solid #fff;
+	-webkit-box-shadow:0px 0px 20px #000;
+	background-color:#fafafa;
+	font-size:50px;
+	color:#EEE;
+	font-weight:bold;
+}
+
+#scroller li:first-child {
+  margin-left:0;
+}
+</style>
+</head>
+<body>
+<div id="header"><a href="http://cubiq.org/iscroll">iScroll</a></div>
+
+<div id="wrapper">
+	<div id="scroller">
+		<ul id="thelist">
+			<li>Photo 1</li>
+			<li>Photo 2</li>
+			<li>Photo 3</li>
+			<li>Photo 4</li>
+			<li>Photo 5</li>
+			<li>Photo 6</li>
+			<li>Photo 7</li>
+			<li>Photo 8</li>
+			<li>Photo 9</li>
+			<li>Photo 10</li>
+		</ul>
+	</div>
+</div>
+
+</body>
+</html>
