@@ -361,10 +361,10 @@ iScroll.prototype = {
 			resetX = that.x,
 			resetY = that.y;
 
-		if (that.x >= 0) resetX = 0;
+		if (that.x >= that.minScrollX) resetX = that.minScrollX;
 		else if (that.x < that.maxScrollX) resetX = that.maxScrollX;
 
-		if (that.y >= 0 || that.maxScrollY > 0) resetY = 0;
+		if (that.y >= that.minScrollY || that.maxScrollY > 0) resetY = that.minScrollY;
 		else if (that.y < that.maxScrollY) resetY = that.maxScrollY;
 
 		if (resetX == that.x && resetY == that.y) {
@@ -489,6 +489,17 @@ iScroll.prototype = {
 		that._unbind(CANCEL_EV);
 	},
 
+	disable: function () {
+		this._unbind(START_EV);
+		this._unbind(MOVE_EV);
+		this._unbind(END_EV);
+		this._unbind(CANCEL_EV);
+	},
+
+	enable: function() {
+		this._bind(START_EV);
+	},
+
 	refresh: function () {
 		var that = this;
 
@@ -498,6 +509,8 @@ iScroll.prototype = {
 		that.scrollerH = that.scroller.offsetHeight;
 		that.maxScrollX = that.wrapperW - that.scrollerW;
 		that.maxScrollY = that.wrapperH - that.scrollerH;
+		that.minScrollX = 0;
+		that.minScrollY = 0;
 		that.dirX = 0;
 		that.dirY = 0;
 
