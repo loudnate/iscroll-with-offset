@@ -36,12 +36,15 @@ function iScroll (el, options) {
 		hideScrollbar: isIDevice || !hasTouch,
 		scrollbarClass: '',
 		bounce: has3d,
+		bounceDegradation: 1.4,
 		bounceLock: false,
 		momentum: has3d,
 		lockDirection: true,
 		zoom: false,
 		zoomMin: 1,
 		zoomMax: 4,
+    scrollFactorX: 1,
+    scrollFactorY: 1,
 		snap: false,
 		snapOffsetX: 0,
 		snapOffsetY: 0,
@@ -55,7 +58,7 @@ function iScroll (el, options) {
 		onScrollFirstMove: null,
 		onZoomStart: null,
 		onZoomEnd: null,
-		checkDOMChange: false		// Experimental
+    checkDOMChange: false    // Experimental
 	};
 
 	// User defined options
@@ -92,19 +95,9 @@ function iScroll (el, options) {
 		that.pullDownLabel = div.getElementsByTagName('span')[1];
 	}
 
-	if (that.pullUpToRefresh) {
-		div = doc.createElement('div');
-		div.className = 'iScrollPullUp';
-		div.innerHTML = '<span class="iScrollPullUpIcon"></span><span class="iScrollPullUpLabel">' + that.options.pullUpLabel[0] + '</span>\n';
-		that.scroller.appendChild(div);
-		that.options.bounce = true;
-		that.pullUpEl = div;
-		that.pullUpLabel = div.getElementsByTagName('span')[1];
-	}
-
 	that.refresh();
 
-	that._bind(RESIZE_EV, window);
+  // that._bind(RESIZE_EV, window);
 	that._bind(START_EV);
 /*	that._bind(MOVE_EV);
 	that._bind(END_EV);
@@ -121,7 +114,7 @@ function iScroll (el, options) {
 
 	if (that.options.checkDOMChange) {
 		that.DOMChangeInterval = setInterval(function () { that._checkSize(); }, 250);
-	}
+}
 }
 
 iScroll.prototype = {
@@ -361,12 +354,15 @@ iScroll.prototype = {
 		that.pointX = point.pageX;
 		that.pointY = point.pageY;
 
+    newX = that.x + deltaX * that.options.scrollFactorX;
+    newY = that.y + deltaY * that.options.scrollFactorY;
+
 		// Slow down if outside of the boundaries
-		if (newX > 0 || newX < that.maxScrollX) {
-			newX = that.options.bounce ? that.x + (deltaX / 2.4) : newX >= 0 || that.maxScrollX >= 0 ? 0 : that.maxScrollX;
+		if (newX > that.minScrollX || newX < that.maxScrollX) {
+			newX = that.options.bounce ? that.x + (deltaX / 1.4) : newX >= 0 || that.maxScrollX >= 0 ? 0 : that.maxScrollX;
 		}
-		if (newY > 0 || newY < that.maxScrollY) {
-			newY = that.options.bounce ? that.y + (deltaY / 2.4) : newY >= 0 || that.maxScrollY >= 0 ? 0 : that.maxScrollY;
+		if (newY > that.minScrollY || newY < that.maxScrollY) {
+			newY = that.options.bounce ? that.y + (deltaY / 1.4) : newY >= 0 || that.maxScrollY >= 0 ? 0 : that.maxScrollY;
 
 			// Pull down to refresh
 			if (that.options.pullToRefresh && that.contentReady) {
@@ -376,7 +372,7 @@ iScroll.prototype = {
 				} else if (that.pullDownToRefresh && that.pullDownEl.className.match('flip')) {
 					that.pullDownEl.className = 'iScrollPullDown';
 					that.pullDownLabel.innerText = that.options.pullDownLabel[0];
-				}
+		}
 
 				if (that.pullUpToRefresh && newY < that.maxScrollY - that.offsetTop) {
 					that.pullUpEl.className = 'iScrollPullUp flip';
@@ -448,30 +444,30 @@ iScroll.prototype = {
 
 		if (!that.moved) {
 			if (hasTouch) {
-				if (that.doubleTapTimer && that.options.zoom) {
-					// Double tapped
-					clearTimeout(that.doubleTapTimer);
-					that.doubleTapTimer = null;
-					that.zoom(that.pointX, that.pointY, that.scale == 1 ? 2 : 1);
-				} else {
-					that.doubleTapTimer = setTimeout(function () {
-						that.doubleTapTimer = null;
-
-						// Find the last touched element
-						target = point.target;
-						while (target.nodeType != 1) {
-							target = target.parentNode;
-						}
-
-						ev = document.createEvent('MouseEvents');
-						ev.initMouseEvent('click', true, true, e.view, 1,
-							point.screenX, point.screenY, point.clientX, point.clientY,
-							e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
-							0, null);
-						ev._fake = true;
-						target.dispatchEvent(ev);
-					}, that.options.zoom ? 250 : 0);
-				}
+        if (that.doubleTapTimer && that.options.zoom) {
+         // Double tapped
+         clearTimeout(that.doubleTapTimer);
+         that.doubleTapTimer = null;
+         that.zoom(that.pointX, that.pointY, that.scale == 1 ? 2 : 1);
+        } else {
+         that.doubleTapTimer = setTimeout(function () {
+           that.doubleTapTimer = null;
+        
+           // Find the last touched element
+           target = point.target;
+           while (target.nodeType != 1) {
+             target = target.parentNode;
+           }
+        
+           ev = document.createEvent('MouseEvents');
+           ev.initMouseEvent('click', true, true, e.view, 1,
+             point.screenX, point.screenY, point.clientX, point.clientY,
+             e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+             0, null);
+           ev._fake = true;
+           target.dispatchEvent(ev);
+         }, that.options.zoom ? 250 : 0);
+        }
 			}
 
 			that._resetPos();
@@ -499,8 +495,8 @@ iScroll.prototype = {
 		}
 
 		if (duration < 300 && that.options.momentum) {
-			momentumX = newPosX ? that._momentum(newPosX - that.startX, duration, -that.x, that.scrollerW - that.wrapperW + that.x, that.options.bounce ? that.wrapperW : 0) : momentumX;
-			momentumY = newPosY ? that._momentum(newPosY - that.startY, duration, -that.y, (that.maxScrollY < 0 ? that.scrollerH - that.wrapperH + that.y : 0), that.options.bounce ? that.wrapperH : 0) : momentumY;
+			momentumX = newPosX ? that._momentum((newPosX - that.startX), duration, -that.x, that.scrollerW - that.wrapperW + that.x, that.options.bounce ? that.wrapperW / (that.options.bounceDegradation * that.options.bounceDegradation) : 0) : momentumX;
+			momentumY = newPosY ? that._momentum((newPosY - that.startY), duration, -that.y, (that.maxScrollY < 0 ? that.scrollerH - that.wrapperH + that.y : 0), that.options.bounce ? that.wrapperH / (that.options.bounceDegradation * that.options.bounceDegradation) : 0) : momentumY;
 
 			newPosX = that.x + momentumX.dist;
 			newPosY = that.y + momentumY.dist;
@@ -514,10 +510,16 @@ iScroll.prototype = {
 
 			// Do we need to snap?
 			if (that.options.snap) {
-				snap = that._snap(newPosX, newPosY);
-				newPosX = snap.x;
-				newPosY = snap.y;
-				newDuration = m.max(snap.time, newDuration);
+        snap = that._snap(newPosX, newPosY);
+        // If we're scrolling in bounds, land on a snap spot.
+        if (newPosX > that.maxScrollX && newPosX < that.minScrollX) {
+          newPosX = snap.x;
+          newDuration = m.max(snap.time, newDuration);
+        }
+        if (newPosY > that.maxScrollY && newPosY < that.minScrollY) {
+          newPosX = snap.y;
+          newDuration = m.max(snap.time, newDuration);
+        }
 			}
 
 /*			if (newPosX > 0 || newPosX < that.maxScrollX || newPosY > 0 || newPosY < that.maxScrollY) {
@@ -1024,29 +1026,29 @@ iScroll.prototype = {
 		that.scrollTo(x, y, time || 400);
 	},
 
-	zoom: function (x, y, scale) {
-		var that = this,
-			relScale = scale / that.scale;
-
-		x = x - that.wrapperOffsetLeft - that.x;
-		y = y - that.wrapperOffsetTop - that.y;
-		that.x = x - x * relScale + that.x;
-		that.y = y - y * relScale + that.y;
-
-		that.scale = scale;
-
-		if (that.options.onZoomStart) that.options.onZoomStart.call(that);
-
-		that.refresh();
-
-		that._bind('webkitTransitionEnd');
-		that._transitionTime(200);
-
-		setTimeout(function () {
-			that.zoomed = true;
-			that.scroller.style.webkitTransform = trnOpen + that.x + 'px,' + that.y + 'px' + trnClose + ' scale(' + scale + ')';
-		}, 0);
-	}
+  zoom: function (x, y, scale) {
+   var that = this,
+     relScale = scale / that.scale;
+  
+   x = x - that.wrapperOffsetLeft - that.x;
+   y = y - that.wrapperOffsetTop - that.y;
+   that.x = x - x * relScale + that.x;
+   that.y = y - y * relScale + that.y;
+  
+   that.scale = scale;
+  
+   if (that.options.onZoomStart) that.options.onZoomStart.call(that);
+  
+   that.refresh();
+  
+   that._bind('webkitTransitionEnd');
+   that._transitionTime(200);
+  
+   setTimeout(function () {
+     that.zoomed = true;
+     that.scroller.style.webkitTransform = trnOpen + that.x + 'px,' + that.y + 'px' + trnClose + ' scale(' + scale + ')';
+   }, 0);
+  }
 };
 
 
